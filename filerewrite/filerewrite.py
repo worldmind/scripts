@@ -58,7 +58,7 @@ def rewrite(file, new_data):
     except:
         backuper.restore()
         locker.unlock()
-        # erorr messages neede to raise
+        # erorr messages needed to raise
         raise ValueError('Rewrite unsuccesful')
     finally:
         locker.unlock()
