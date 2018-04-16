@@ -48,8 +48,8 @@ def rewrite(file, new_data):
     backuper = Backuper(file = file)
 
     locker.lock()
-    backuper.backup()
     try:
+        backuper.backup()
         file.seek(0)
         file.write(new_data)
         file.truncate()
