@@ -59,3 +59,8 @@ if __name__ == '__main__':
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main(loop, mongo_collection, raw_urls))
+
+    # if asyncio.ensure_future()
+#    pending_tasks = [task for task in asyncio.Task.all_tasks() if not task.done()]
+#    loop.run_until_complete(asyncio.gather(*pending_tasks))
+#    loop.close()
