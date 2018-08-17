@@ -10,7 +10,8 @@ USERS = {
     'otto': {'id': 2, 'login': 'otto'},
 }
 
-user_loader = lambda username, password: USERS.get(username, '')
+#user_loader = lambda username, password: USERS.get(username, '')
+user_loader = lambda username, password: username
 auth_backend = BasicAuthBackend(user_loader)
 auth_middleware = FalconAuthMiddleware(auth_backend, exempt_routes=['/exempt'], exempt_methods=['HEAD'])
 
@@ -31,8 +32,10 @@ class BidsResource(object):
         resp.status = falcon.HTTP_200
 
     def on_put(self, req, resp, item_id):
+        print('putting bid')
         accept_time = time.time()
-        user_login = req.context['user']['login']
+#        user_login = req.context['user']['login']
+        user_login = req.context['user']
         save_bid(user_login, item_id, accept_time)
         resp.body = ('Bid accepted')
         resp.status = falcon.HTTP_200
@@ -47,7 +50,7 @@ class UserBidsResource(object):
 def save_bid(user_login, item_id, accept_time):
     pipe = REDIS.pipeline()
     pipe.execute_command('ZADD', item_id, 'NX', accept_time, user_login)
-    pipe.sadd('%s:bids'.format(user_login), item_id)
+    pipe.sadd('{0}:bids'.format(user_login), item_id)
     pipe.execute()
 
 def get_user_by_id(user_id):
