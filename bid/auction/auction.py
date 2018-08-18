@@ -11,7 +11,11 @@ USERS = {
 
 user_loader = lambda username, password: USERS.get(username, '')
 auth_backend = BasicAuthBackend(user_loader)
-auth_middleware = FalconAuthMiddleware(auth_backend, exempt_routes=['/exempt'], exempt_methods=['HEAD'])
+auth_middleware = FalconAuthMiddleware(
+    auth_backend,
+    exempt_routes=['/exempt'],
+    exempt_methods=['HEAD'],
+)
 
 REDIS = redis.Redis(decode_responses=True)
 
@@ -38,6 +42,7 @@ class BidsResource(object):
         resp.body = json.dumps({'msg': 'Bid accepted'})
         resp.status = falcon.HTTP_CREATED
 
+
 class UserBidsResource(object):
     def on_get(self, req, resp, user_id):
         user_id = int(user_id)
@@ -50,19 +55,23 @@ class UserBidsResource(object):
         resp.body = json.dumps([int(x) for x in bids])
         resp.status = falcon.HTTP_OK
 
+
 def save_bid(user_login, item_id, accept_time):
     pipe = REDIS.pipeline()
     pipe.execute_command('ZADD', item_id, 'NX', accept_time, user_login)
     pipe.sadd(user_bids_key(user_login), item_id)
     pipe.execute()
 
+
 def user_bids_key(user_login):
     return '{0}:bids'.format(user_login)
+
 
 def get_user_by_id(user_id):
     for login in USERS.keys():
         if USERS[login]['id'] == user_id:
             return login
+
 
 app = falcon.API(middleware=[auth_middleware])
 bids = BidsResource()

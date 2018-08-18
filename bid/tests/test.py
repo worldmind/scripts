@@ -1,7 +1,6 @@
-import sys,os
-import falcon
+import sys
+import os
 from falcon import testing
-import json
 import pytest
 from base64 import b64encode
 
@@ -32,11 +31,13 @@ def test_api(client):
     response = get_user_bids(client, JOHN_AUTH_DATA, JOHN_USER_ID)
     assert response.json == [999]
 
+
 def make_bid(client, auth_data, item_id):
     return client.simulate_put(
         '/items/{0}/bids'.format(item_id),
         headers={'Authorization': 'Basic {0}'.format(auth_data)},
     )
+
 
 def get_winner(client, auth_data, item_id):
     return client.simulate_get(
@@ -44,11 +45,13 @@ def get_winner(client, auth_data, item_id):
         headers={'Authorization': 'Basic {0}'.format(auth_data)},
     )
 
+
 def get_item_bids(client, auth_data, item_id):
     return client.simulate_get(
         '/items/{0}/bids'.format(item_id),
         headers={'Authorization': 'Basic {0}'.format(auth_data)},
     )
+
 
 def get_user_bids(client, auth_data, user_id):
     return client.simulate_get(

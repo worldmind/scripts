@@ -24,8 +24,10 @@ def save_bid(user_login, item_id, accept_time):
     pipe.sadd(user_bids_key(user_login), item_id)
     pipe.execute()
 
+
 def user_bids_key(user_login):
     return '{0}:bids'.format(user_login)
+
 
 def make_app():
     return tornado.web.Application([
