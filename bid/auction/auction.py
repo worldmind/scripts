@@ -17,12 +17,14 @@ auth_middleware = FalconAuthMiddleware(
     exempt_methods=['HEAD'],
 )
 
+
+RECONNECT_PAUSE = 0.5
 REDIS = redis.Redis(decode_responses=True)
 
 
 class WinnerResource(object):
     def on_get(self, req, resp, item_id):
-        bidders = REDIS.zrange(item_id, 0, 0)
+        bidders = redis_execute(lambda: REDIS.zrange(item_id, 0, 0))
         resp.body = json.dumps(bidders[0])
         resp.status = falcon.HTTP_OK
 
@@ -30,7 +32,7 @@ class WinnerResource(object):
 class BidsResource(object):
     def on_get(self, req, resp, item_id):
         item_id = int(item_id)
-        bidders = REDIS.zrange(item_id, 0, -1)
+        bidders = redis_execute(lambda: REDIS.zrange(item_id, 0, -1))
         resp.body = json.dumps(bidders)
         resp.status = falcon.HTTP_OK
 
@@ -38,7 +40,7 @@ class BidsResource(object):
         item_id = int(item_id)
         accept_time = time.time()
         user_login = req.context['user']['login']
-        save_bid(user_login, item_id, accept_time)
+        redis_execute(lambda: save_bid(user_login, item_id, accept_time))
         resp.body = json.dumps({'msg': 'Bid accepted'})
         resp.status = falcon.HTTP_CREATED
 
@@ -51,7 +53,7 @@ class UserBidsResource(object):
             resp.body = json.dumps({'msg': 'No such user'})
             resp.status = falcon.HTTP_404
             return
-        bids = REDIS.smembers(user_bids_key(user_login))
+        bids = redis_execute(lambda: REDIS.smembers(user_bids_key(user_login)))
         resp.body = json.dumps([int(x) for x in bids])
         resp.status = falcon.HTTP_OK
 
@@ -63,6 +65,22 @@ def save_bid(user_login, item_id, accept_time):
     pipe.execute()
 
 
+def redis_execute(command):
+    global REDIS
+    while True:
+        try:
+            return command()
+        except redis.ConnectionError:
+            while True:
+                try:
+                    REDIS = connect2redis()
+                    time.sleep(RECONNECT_PAUSE)
+                    REDIS.ping()
+                    break
+                except:
+                    pass
+
+
 def user_bids_key(user_login):
     return '{0}:bids'.format(user_login)
 
@@ -71,6 +89,10 @@ def get_user_by_id(user_id):
     for login in USERS.keys():
         if USERS[login]['id'] == user_id:
             return login
+
+
+def connect2redis():
+    return redis.Redis(decode_responses=True)
 
 
 app = falcon.API(middleware=[auth_middleware])
