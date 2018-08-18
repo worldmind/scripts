@@ -1,23 +1,18 @@
 # Preinstall
 
-sudo pip3 install httpie
+Python 3.5.3, Redis 3.2.6
 
 wajig install redis-server
 
-sudo pip3 install falcon
+# Install
 
-#sudo pip3 install ujson
-#sudo pip3 install cython
-#sudo pip3 install --no-binary :all: falcon
-
-sudo pip3 install -U falcon-auth
-
-sudo pip3 install uwsgi
-sudo pip3 install redis
+pip install -U -r requirements.txt
 
 ## Running
 
-uwsgi --http :8000 --lazy-apps --wsgi-file auction/auction.py  --callable app
+uwsgi --http :8000 --lazy-apps --workers=6 --wsgi-file auction/auction.py --callable app all> app.log
+
+if bash used: > app.log 2>&1 
 
 ## Functional testing
 
@@ -48,4 +43,4 @@ pytest -v tests/test.py
 
 ## Load testing
 
-ab -k -m PUT -A john:12345 -c 5 -n 20 127.0.0.1:8000/items/666/bids
+ab -r -k -m PUT -A john:12345 -c 500 -n 20000 127.0.0.1:8000/items/999/bids all> bids_load.report

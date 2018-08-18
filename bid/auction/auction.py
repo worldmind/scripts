@@ -46,17 +46,17 @@ class UserBidsResource(object):
             resp.body = json.dumps({'msg': 'No such user'})
             resp.status = falcon.HTTP_404
             return
-        bids = REDIS.smembers(use_bids_key(user_login))
+        bids = REDIS.smembers(user_bids_key(user_login))
         resp.body = json.dumps([int(x) for x in bids])
         resp.status = falcon.HTTP_OK
 
 def save_bid(user_login, item_id, accept_time):
     pipe = REDIS.pipeline()
     pipe.execute_command('ZADD', item_id, 'NX', accept_time, user_login)
-    pipe.sadd(use_bids_key(user_login), item_id)
+    pipe.sadd(user_bids_key(user_login), item_id)
     pipe.execute()
 
-def use_bids_key(user_login):
+def user_bids_key(user_login):
     return '{0}:bids'.format(user_login)
 
 def get_user_by_id(user_id):
