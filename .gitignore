@@ -2,3 +2,5 @@ __pycache__
 .cache
 *.report
 *.log
+input.txt
+output.txt
