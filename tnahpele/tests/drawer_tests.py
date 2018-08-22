@@ -137,8 +137,18 @@ def test_wrong_canvas():
 def test_outside_canvas():
     commands = iter([
         'C 20 4',
-        'R 1 200 6 2'
+        'R 1 2 6 200'
     ])
     with pytest.raises(drawer.OutsideCanvasError):
+        for screen in drawer.draw(commands):
+            print(screen)
+
+
+def test_bad_coord():
+    commands = iter([
+        'C 20 4',
+        'R 1 200 6 2'
+    ])
+    with pytest.raises(drawer.WrongCoordinatesError):
         for screen in drawer.draw(commands):
             print(screen)

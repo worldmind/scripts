@@ -38,6 +38,7 @@ class ParsingError(Exception): pass  # noqa
 class CanvasParsingError(ParsingError): pass  # noqa
 class WrongLineTypeError(Exception): pass  # noqa
 class OutsideCanvasError(Exception): pass  # noqa
+class WrongCoordinatesError(Exception): pass  # noqa
 
 
 def parse_canvas_cmd(line):
@@ -63,7 +64,7 @@ def draw_canvas_border(canvas, vertical_char, horizontal_char):
     line(canvas, 0, max_y, max_x, max_y, horizontal_char)  # bottom horiz
 
 
-def canvas2string(canvas):
+def canvas2str(canvas):
     str = ''
     for y in range(len(canvas[0])):
         for x in range(len(canvas)):
@@ -80,7 +81,7 @@ def point_inside_canvas(canvas, x, y):
         return False
 
 
-# Can be extended to any points count if will needed
+# Can be extended to any points count by using *args
 def points_inside_canvas(canvas, x1, y1, x2, y2):
     point1_inside = point_inside_canvas(canvas, x1, y1)
     point2_inside = point_inside_canvas(canvas, x2, y2)
@@ -99,7 +100,13 @@ def parse_line_cmd(line):
         raise ParsingError(line)
 
 
+def point2str(x, y):
+    return '({0}, {1}) '.format(x, y)
+
+
 def line(canvas, x1, y1, x2, y2, point_char):
+    if x2 < x1 or y2 < y1:
+        raise WrongCoordinatesError(point2str(x1, y1) + point2str(x2, y2))
     if x1 == x2:  # vertical line
         for y in range(y1, y2+1):
             canvas[x1][y] = point_char
@@ -107,12 +114,12 @@ def line(canvas, x1, y1, x2, y2, point_char):
         for x in range(x1, x2+1):
             canvas[x][y1] = point_char
     else:
-        raise WrongLineTypeError('{0} {1} {2} {3}'.format(x1, y1, x2, y2))
+        raise WrongLineTypeError(point2str(x1, y1) + point2str(x2, y2))
 
 
 def draw_line(canvas, x1, y1, x2, y2, point_char):
     if not points_inside_canvas(canvas, x1, y1, x2, y2):
-        raise OutsideCanvasError('{0} {1} {2} {3}'.format(x1, y1, x2, y2))
+        raise OutsideCanvasError(point2str(x1, y1) + point2str(x2, y2))
     line(canvas, x1, y1, x2, y2, point_char)
 
 
@@ -127,8 +134,10 @@ def parse_rectangle_cmd(line):
 
 
 def draw_rectangle(canvas, x1, y1, x2, y2, point_char):
+    if x2 < x1 or y2 < y1:
+        raise WrongCoordinatesError(point2str(x1, y1) + point2str(x2, y2))
     if not points_inside_canvas(canvas, x1, y1, x2, y2):
-        raise OutsideCanvasError('{0} {1} {2} {3}'.format(x1, y1, x2, y2))
+        raise OutsideCanvasError(point2str(x1, y1) + point2str(x2, y2))
     draw_line(canvas, x1, y1, x1, y2, point_char)  # left vert
     draw_line(canvas, x2, y1, x2, y2, point_char)  # right vert
     draw_line(canvas, x1, y1, x2, y1, point_char)  # top horiz
@@ -162,7 +171,7 @@ def draw(commands):
     width, heigth = parse_canvas_cmd(line)
     canvas = create_canvas(width, heigth)
     draw_canvas_border(canvas, VERTICAL_BORDER, HORIZONTAL_BORDER)
-    yield canvas2string(canvas)
+    yield canvas2str(canvas)
     for line in commands:
         if line[0] == 'L':
             x1, y1, x2, y2 = parse_line_cmd(line)
@@ -177,7 +186,7 @@ def draw(commands):
             continue
         else:
             raise ParsingError(line)
-        yield canvas2string(canvas)
+        yield canvas2str(canvas)
 
 
 if __name__ == '__main__':
@@ -194,3 +203,5 @@ if __name__ == '__main__':
         print('Vertical and horizontal lines supported only: ', e)
     except OutsideCanvasError as e:
         print('Points outside canvas: ', e)
+    except WrongCoordinatesError as e:
+        print('End point is less than start point: ', e)
