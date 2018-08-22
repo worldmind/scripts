@@ -63,11 +63,13 @@ def draw_canvas_border(canvas, vertical_char, horizontal_char):
     line(canvas, 0, max_y, max_x, max_y, horizontal_char)  # bottom horiz
 
 
-def show(canvas):
+def canvas2string(canvas):
+    str = ''
     for y in range(len(canvas[0])):
         for x in range(len(canvas)):
-            print(canvas[x][y], end='')
-        print()
+            str = str + canvas[x][y]
+        str = str + '\n'
+    return str[:-1]
 
 
 def point_inside_canvas(canvas, x, y):
@@ -155,35 +157,35 @@ def fill(canvas, x, y, color):
     fill(canvas, x, y+1, color)
 
 
-def draw(file_name):
-    with open(file_name) as file:
-        line = file.readline()
-        width, heigth = parse_canvas_cmd(line)
-        canvas = create_canvas(width, heigth)
-        draw_canvas_border(canvas, VERTICAL_BORDER, HORIZONTAL_BORDER)
-        yield canvas
-        for line in file:
-            if line[0] == 'L':
-                x1, y1, x2, y2 = parse_line_cmd(line)
-                draw_line(canvas, x1, y1, x2, y2, LINE_POINT)
-            elif line[0] == 'R':
-                x1, y1, x2, y2 = parse_rectangle_cmd(line)
-                draw_rectangle(canvas, x1, y1, x2, y2, LINE_POINT)
-            elif line[0] == 'B':
-                x, y, color = parse_fill_cmd(line)
-                fill(canvas, x, y, color)
-            elif line[0] == '#':
-                continue
-            else:
-                raise ParsingError(line)
-            yield canvas
+def draw(commands):
+    line = next(commands)
+    width, heigth = parse_canvas_cmd(line)
+    canvas = create_canvas(width, heigth)
+    draw_canvas_border(canvas, VERTICAL_BORDER, HORIZONTAL_BORDER)
+    yield canvas2string(canvas)
+    for line in commands:
+        if line[0] == 'L':
+            x1, y1, x2, y2 = parse_line_cmd(line)
+            draw_line(canvas, x1, y1, x2, y2, LINE_POINT)
+        elif line[0] == 'R':
+            x1, y1, x2, y2 = parse_rectangle_cmd(line)
+            draw_rectangle(canvas, x1, y1, x2, y2, LINE_POINT)
+        elif line[0] == 'B':
+            x, y, color = parse_fill_cmd(line)
+            fill(canvas, x, y, color)
+        elif line[0] == '#':
+            continue
+        else:
+            raise ParsingError(line)
+        yield canvas2string(canvas)
 
 
 if __name__ == '__main__':
     arguments = docopt(__doc__)
     try:
-        for canvas in draw(arguments['<commands_file_name>']):
-            show(canvas)
+        with open(arguments['<commands_file_name>']) as file:
+            for screen in draw(file):
+                print(screen)
     except CanvasParsingError as e:
         print('First line must be a valid canvas drawing command: ', e)
     except ParsingError as e:
