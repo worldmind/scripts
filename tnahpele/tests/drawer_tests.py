@@ -57,6 +57,34 @@ def test_draw():
         assert screen == expected
 
 
+def test_fill_all():
+    commands = iter([
+        'C 20 4',
+        'B 10 3 o',
+    ])
+    results = [
+        '''
+----------------------
+|                    |
+|                    |
+|                    |
+|                    |
+----------------------
+''',
+        '''
+----------------------
+|oooooooooooooooooooo|
+|oooooooooooooooooooo|
+|oooooooooooooooooooo|
+|oooooooooooooooooooo|
+----------------------
+''',
+    ]
+    results = [x.strip('\r\n') for x in results]
+    for screen, expected in zip(drawer.draw(commands), results):
+        assert screen == expected
+
+
 def test_wrong_line_type():
     commands = iter([
         'C 20 4',
