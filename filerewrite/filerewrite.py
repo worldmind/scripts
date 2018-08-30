@@ -6,6 +6,7 @@ import attr
 # For cases with reading whole file to memory
 # for another cases iterator needed
 
+
 @attr.s
 class Locker(object):
     file = attr.ib()
@@ -43,9 +44,10 @@ class Backuper(object):
     def clean(self):
         os.remove(self.bak_file_name)
 
+
 def rewrite(file, new_data):
-    locker = Locker(file = file)
-    backuper = Backuper(file = file)
+    locker = Locker(file=file)
+    backuper = Backuper(file=file)
 
     locker.lock()
     try:
