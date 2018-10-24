@@ -1,26 +1,27 @@
 import json
 import sys
 
-prime_file = 'prime.json'
-with open(prime_file) as file:
-    primes = json.load(file)
+PRIME_FILE = 'prime.json'
+with open(PRIME_FILE) as file:
+    PRIMES = json.load(file)
 
-if not primes:
+if not PRIMES:
     print('Void prime numbers database')
     sys.exit(1)
 
 
 def is_prime(number):
-    for prime in primes:
+    for prime in PRIMES:
         if number == prime:
             return True
-        if prime > number:
+        if prime > number:  # optimization
             return False
+    return False
 
 
 def three_summand(number):
     smaller_primes = []
-    for prime in primes:
+    for prime in PRIMES:
         if prime <= number:
             smaller_primes.append(prime)
     result = []
@@ -31,7 +32,7 @@ def three_summand(number):
             for third in smaller_primes:
                 if number == first + second + third:
                     summands = sorted([first, second, third])
-                    if len(result) == 0:
+                    if not result:
                         result.append(summands)
                     elif result[0] != summands:
                         result.append(summands)
